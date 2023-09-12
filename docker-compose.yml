@@ -3,31 +3,55 @@ services:
   redis:
     image: redis:alpine
     restart: always
+    volumes:
+      - redisv:/data
+    networks:
+      - backendn
       
   db:
     image: postgres:15-alpine
     restart: always
+    volumes:
+       - postgresv:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
-
+    networks:
+      - backendn
 
   worker:
     build: ./worker
     depends_on:
       - db
       - redis
+    networks:
+      - backendn
 
   vote:
     build: ./vote
     ports:
-      - "80:80"
+      - "80"
     depends_on:
       - redis
+    networks:
+      - frontn
+      - backendn
   
   result:
     build: ./result
     ports:
-      - "81:80"
+      - "80"
     depends_on:
       - db
+    networks:
+      - frontn
+      - backendn
+volumes:
+  postgresv:
+    name: postgresv
+  redisv:
+    name: redisv
+      
+networks:
+  frontn:
+  backendn:
